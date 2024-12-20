@@ -1,0 +1,8 @@
+Run the following command in MySQL Workbench or command line:
+
+  LOAD DATA INFILE '/path/to/Customers.csv' 
+  INTO TABLE Customers
+  FIELDS TERMINATED BY ',' 
+  ENCLOSED BY '"'
+  LINES TERMINATED BY '\n'
+  IGNORE 1 ROWS;
