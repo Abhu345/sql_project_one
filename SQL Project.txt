@@ -1,0 +1,161 @@
+1.Supply Chain Analysis with Advanced SQL Techniques 
+
+Step 1. create view comp_view as select p.productname,pl.productline,c.customername,o.city
+from customers c natural join offices  o natural join productlines pl natural join products p; 
+select *from comp_view;
+
+
+Step2. with best_supplier as (select productname, productvendor, quantityinstock,
+ buyprice,rank() over(partition by productvendor order by buyprice desc)as rank_val  from products)
+ select *from best_supplier where rank_val=1;
+
+
+Step3:	with total_sales as
+(select * from customers inner join orders using(customernumber)  inner join orderdetails using(ordernumber))
+select customername,sum(quantityordered*priceeach)as sales from total_sales inner join employees 
+where total_sales.salesrepemployeenumber=employees.employeenumber group by employeenumber;
+
+
+Step4:	delimiter //
+create trigger product_availaibility
+after update on orderDetails
+for each row 
+begin 
+     update status set quantityOrdered= old.quantityOrdered;
+     update status set availability= quantityInStock - old.quantityOrdered;
+end //
+delimiter ;
+
+
+
+2.Employee Performance and Compensation Review
+
+
+Step 1: alter table employees add salary int;
+	alter table employees add bonus int;
+
+delimiter //
+create procedure total_compensation(in empid int,out total_compensation int)
+begin
+declare emp_salary int;
+declare emp_bonus int;
+select salary,bonus into emp_salary,emp_bonus from employees where employeenumber=empid;
+set total_compensation=emp_salary+emp_bonus;
+end //
+delimiter ;
+drop procedure total_compensation;
+call total_compensation(1002,@output);
+select @output;
+
+step 2: 
+
+delimiter //
+create function average_sales(empid int)
+returns int
+deterministic begin
+declare Avg_sal int default 0;
+select round(avg(quantityordered*priceeach),2)into avg_sal from  orderdetails natural join orders group by customernumber having customernumber=empid;
+return Avg_sal;
+end //
+delimiter ;
+
+set @result=average_sales(103);
+select @result;
+
+
+3.Sales Trend Analysis
+
+step1:
+with RecursiveCTE AS (
+    select 
+        year(OrderDate) as year,
+        month(OrderDate) as month,
+        sum(QuantityOrdered * PriceEach) as cumm_sum
+    from 
+        Orders
+    natural join 
+        OrderDetails
+    group by
+        year(OrderDate), month(OrderDate)
+    union all
+    select
+        year(o.OrderDate) as year,
+        month(o.OrderDate) as month,
+        r.Cumm_Sum + SUM(od.QuantityOrdered * od.PriceEach) AS Cumm_Sum
+    FROM 
+        Orders o
+    natural join 
+        OrderDetails od
+    join
+        RecursiveCTE r ON (year(o.OrderDate) > r.Year or (YEAR(o.OrderDate) = r.Year and month(o.OrderDate) > r.Month))
+    group by
+        year(o.OrderDate),month(o.OrderDate), r.Cumm_Sum
+)
+select Year,Month,MAX(Cumm_Sum) as Cumm_Sum from RecursiveCTE group by Year, Month
+order by Year, Month;
+
+step2:
+
+
+step3:
+select ord_year, ord_month, sales, cummulative_sales, growth_percentage from sales_trends 
+where growth_percentage > (select avg(growth_percentage) from sales_trends);
+
+
+4.Customer Segmentation 
+ 
+Step 1: 
+ 
+create view customer_orders as
+with cte1 as(select o.customernumber, od.ordernumber,count(o.ordernumber) total_orders_placed, sum(od.quantityordered* od.priceeach) total_amount_spent 
+from orders o natural join orderdetails od group by o.ordernumber)
+select customernumber, ordernumber, sum(total_orders_placed) total_orders, sum(total_amount_spent) total_amount from cte1 group by customernumber;
+ 
+ Step 2: 
+
+ 
+create table customer_order_segment as select * from customer_orders;
+alter table customer_order_segment add customer_rank varchar(20);
+ 
+delimiter //
+create procedure segment_customers()
+	begin
+		update customer_order_segment
+        set customer_rank = case 
+			when total_amount >= 100000.00 
+				then 'high-value'
+			when total_amount >= 50000.00 and total_amount < 100000.00
+				then 'medium-value'
+            when total_amount < 50000.00 
+				then 'low-value'
+		end;
+        select * 
+        from customer_order_segment;
+    end //
+delimiter ; 
+call segment_customers();
+
+ 
+Step 3: 
+ 
+select cos.* , c.customername from customer_order_segment cos natural join customers c;
+
+
+
+5.Database Performance Tuning 
+
+
+step1:
+create  unique index product_idx on products (productname,productcode);
+EXPLAIN SELECT * FROM products WHERE productcode = 'S10_1678' AND productname = '1969 Harley Davidson Ultimate Chopper';
+
+step2:
+select productlinesales.productline,products.productname,productlinesales.orderyear,
+round(percent_rank() over(partition by productlinesales.productline order by productlinesales.orderyear),2)percent from products 
+natural join productlinesales;
+
+step3:
+select *from employees;
+create index emp_idx on employees (email,officecode);
+
+ 
