@@ -1,0 +1,224 @@
+create database dbms;
+Query OK, 1 row affected (0.09 sec)
+
+mysql> use dbms;
+Database changed
+mysql> show tables;
+Empty set (0.06 sec)
+
+mysql> create table student(
+    -> name varchar(25),
+    -> age int,
+    -> city varchar(30)
+    -> );
+Query OK, 0 rows affected (0.21 sec)
+
+mysql> desc student;
++-------+-------------+------+-----+---------+-------+
+| Field | Type        | Null | Key | Default | Extra |
++-------+-------------+------+-----+---------+-------+
+| name  | varchar(25) | YES  |     | NULL    |       |
+| age   | int         | YES  |     | NULL    |       |
+| city  | varchar(30) | YES  |     | NULL    |       |
++-------+-------------+------+-----+---------+-------+
+3 rows in set (0.06 sec)
+
+mysql> insert into student values('abhishek',22,'bihar');
+Query OK, 1 row affected (0.06 sec)
+
+mysql> select *from student;
++----------+------+-------+
+| name     | age  | city  |
++----------+------+-------+
+| abhishek |   22 | bihar |
++----------+------+-------+
+1 row in set (0.00 sec)
+
+
+mysql> alter table student add column contact int;
+Query OK, 0 rows affected (0.10 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> alter table student modify name varchar(46);
+Query OK, 0 rows affected (0.07 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> alter table student change name ename varchar(25);
+Query OK, 1 row affected (0.22 sec)
+Records: 1  Duplicates: 0  Warnings: 0
+
+mysql> desc student;
++---------+-------------+------+-----+---------+-------+
+| Field   | Type        | Null | Key | Default | Extra |
++---------+-------------+------+-----+---------+-------+
+| ename   | varchar(25) | YES  |     | NULL    |       |
+| age     | int         | YES  |     | NULL    |       |
+| city    | varchar(30) | YES  |     | NULL    |       |
+| contact | int         | YES  |     | NULL    |       |
++---------+-------------+------+-----+---------+-------+
+4 rows in set (0.05 sec)
+
+mysql> insert into student values('abhi',23,'patna',12345);
+Query OK, 1 row affected (0.00 sec)
+
+update student set ename='abhishek kumar' where ename='abhishek';
+Query OK, 1 row affected (0.04 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> insert into student values('abhi',23,'patna',11111);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select *from student;
++----------+------+-------+---------+
+| ename    | age  | city  | contact |
++----------+------+-------+---------+
+| abhishek |   22 | bihar |   12345 |
+| abhi     |   23 | patna |   11111 |
++----------+------+-------+---------+
+2 rows in set (0.00 sec)
+
+
+mysql> start transaction;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> rollback;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> select *from student;
++----------+------+-------+---------+
+| ename    | age  | city  | contact |
++----------+------+-------+---------+
+| abhishek |   22 | bihar |   12345 |
++----------+------+-------+---------+
+1 row in set (0.00 sec)
+
+mysql> select *from student;
++----------+------+-------+---------+
+| ename    | age  | city  | contact |
++----------+------+-------+---------+
+| abhishek |   22 | bihar |   12345 |
++----------+------+-------+---------+
+1 row in set (0.00 sec)
+
+mysql> insert into student values('abhi',23,'patna',11111);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into student values('rohan',24,'goa',10000);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> savepoint addition;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> insert into student values('ronak',25,'delhi',80000);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select *from student;
++----------+------+-------+---------+
+| ename    | age  | city  | contact |
++----------+------+-------+---------+
+| abhishek |   22 | bihar |   12345 |
+| abhi     |   23 | patna |   11111 |
+| rohan    |   24 | goa   |   10000 |
+| ronak    |   25 | delhi |   80000 |
++----------+------+-------+---------+
+4 rows in set (0.00 sec)
+
+mysql> rollback to addition;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> select *from student;
++----------+------+-------+---------+
+| ename    | age  | city  | contact |
++----------+------+-------+---------+
+| abhishek |   22 | bihar |   12345 |
+| abhi     |   23 | patna |   11111 |
+| rohan    |   24 | goa   |   10000 |
++----------+------+-------+---------+
+3 rows in set (0.00 sec)
+
+mysql> select user();
++----------------+
+| user()         |
++----------------+
+| root@localhost |
++----------------+
+1 row in set (0.00 sec)
+
+mysql> create user 'abhi'@localhost identified by '12345';
+Query OK, 0 rows affected (0.07 sec)
+
+mysql> select user,host from mysql.user;
++------------------+-----------+
+| user             | host      |
++------------------+-----------+
+| abhi             | %         |
+| abhi             | localhost |
+| mysql.infoschema | localhost |
+| mysql.session    | localhost |
+| mysql.sys        | localhost |
+| root             | localhost |
++------------------+-----------+
+6 rows in set (0.00 sec)
+
+mysql> grant select on *.* to 'abhi'@'localhost';
+Query OK, 0 rows affected (0.01 sec)
+
+grant insert on dbms.student to  'abhi'@'localhost';
+Query OK, 0 rows affected (0.04 sec)
+
+mysql> system mysql -u abhi -p;
+Enter password: *****
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 174
+
+
+mysql> select user();
++----------------+
+| user()         |
++----------------+
+| abhi@localhost |
++----------------+
+1 row in set (0.00 sec)
+
+mysql> insert into dbms.student values('satyam',22,'delhi',12345667);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select *from dbms.student;
++----------+------+-------+----------+
+| ename    | age  | city  | contact  |
++----------+------+-------+----------+
+| abhishek |   22 | bihar |    12345 |
+| abhi     |   23 | patna |    11111 |
+| rohan    |   24 | goa   |    10000 |
+| satyam   |   22 | delhi | 12345667 |
++----------+------+-------+----------+
+4 rows in set (0.00 sec)
+
+mysql> use dbms;
+Database changed
+mysql> delete from student where age=24;
+ERROR 1142 (42000): DELETE command denied to user 'abhi'@'localhost' for table 'student'
+mysql> system mysql -u root -p;
+Enter password: ****
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 175
+
+
+mysql> revoke insert on dbms.student from 'abhi'@'localhost';
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> system mysql -u abhi -p;
+Enter password: *****
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 176
+
+mysql> use dbms;
+Database changed
+mysql> insert into student values('kumar',22,'goa',122121);
+ERROR 1142 (42000): INSERT command denied to user 'abhi'@'localhost' for table 'student'
+
+
+
+
+
+
